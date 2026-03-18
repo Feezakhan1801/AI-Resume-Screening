@@ -2,10 +2,19 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import shutil
-from .database import init_db, save_evaluation, get_all_results
-from .roles import JOB_ROLES
-from .resume_parser import extract_text_from_file
-from .llm import evaluate_resume
+import sys
+from pathlib import Path
+
+# Ensure the project root is on sys.path so imports work whether running
+# from the project root (recommended) or from the backend/ directory.
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from backend.database import init_db, save_evaluation, get_all_results
+from backend.roles import JOB_ROLES
+from backend.resume_parser import extract_text_from_file
+from backend.llm import evaluate_resume
 
 app = FastAPI()
 
@@ -45,3 +54,10 @@ async def evaluate_resume_endpoint(data: dict):
 @app.get("/results")
 async def get_results():
     return get_all_results()
+
+
+if __name__ == "__main__":
+    # Allows running directly via `python backend/main.py` for local testing.
+    import uvicorn
+
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
